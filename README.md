@@ -1,2 +1,2 @@
-EMAlgorithm
+EM Algorithm
 ===========
