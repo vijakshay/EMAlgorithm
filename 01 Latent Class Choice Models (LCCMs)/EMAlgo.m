@@ -1,6 +1,14 @@
-%EM Algorithm for estimating latent class multinomial logit models 
-%allowing for multiple observations per individual
-%and a class-membership multinomial logit model
+% EM Algorithm for estimating Latent Class Choice Models (LCCMs), where
+% both the class membership model and the class-specific choice model
+% are multinomial logit. 
+% 
+% The data for input must be in long format.
+%
+% The estimation procedure starts with the EM algorithm (refer to the file
+% Documentation.pdf on a description of the EM algorithm as it applies to LCCMs). 
+% Once the EM algorithm has converged, the script switches to the usual 
+% gradient-based Newton-Raphson algorithm, to check that the optimum identified
+% by the EM algorithm is indeed a local maximum.
 
 clear all
 
@@ -17,51 +25,69 @@ global NUMVARSINDMOD VARSINDMOD ALTAVINDMOD
 
 global TVARSF TCH TCSCH TALTAV TALTAVMAT TALTAVVEC TCSAV
 
-
 diary off
 delete threeClass01.asc
 diary threeClass01.asc
 
 
-%%%%
-%Data Input and Model Specification
-%%%%
-
-disp(' ');
-disp('MODEL DESCRIPTION: A latent three class model of travel mode choice');
-disp('for all tours, mandatory and otherwise, using the BATS 2000 dataset.');
-disp('Class 1 denotes mutlimodal all users and Classes 2 and 3 denote');
-disp('anti-bike multimodals.');
-disp(' ');
-disp(' ');
-
-NUMCLASSESIND = 3;
+% Convergence criteria:
+%
+% llTol is the minimum change required in the log-likelihood function
+% between successive iterations for the optimization algorithm to stop. It is used
+% in the M-step of the EM algorithm.
+%
+% maxIters are the maximum iterations allowed before the optimization algorithm
+% is forcibly stopped. Again, it is used in in the M-step of the EM algorithm.
+%
+% emTol is the minimum change required in the log-likelihood function
+% between successive iterations for the EM algorithm to stop.
+%
+% nrTol is the minimum change required in the log-likelihood function
+% between successive iterations for the Newton-Raphson algorithm to stop.
 
 llTol = 1e-06;
 maxIters = 10000;
 emTol = 1e-04;
 nrTol = 1e-12;
 
+
+%%%%
+% Data Input and Model Specification
+%%%%
+
+disp(' ');
+disp('MODEL DESCRIPTION: A latent three class model of travel mode choice');
+disp('for all tours, mandatory and otherwise, using the BATS 2000 dataset.');
+disp(' ');
+disp(' ');
+
+% Global variable denoting number of classes
+NUMCLASSESIND = 3;
+
 disp('Reading data');
 data = load('data.txt');
 
 %Class Specific Choice Model 
 
-idp = data(:,1);
-idCase = data(:,2);
-idAlt = data(:,3);
-CH = data(:,4);
+idp = data(:,1);		% Individual identifier 
+idCase = data(:,2);		% Choice situation identifier
+idAlt = data(:,3);		% Alternative identifier
+CH = data(:,4);			% Dependent variable
 
-x0=data(:,5);
+% Alternative attributes
+x0=data(:,5);			
 x1=data(:,6);
 x2=data(:,7);
 
+% Variables entering class-sepcific choice model for Class 1
 VARSF1 = [x0 x1 x2]';
 namesFixed1 = {'x0' 'x1' 'x2'};
 
+% Variables entering class-sepcific choice model for Class 2
 VARSF2 = [x0 x1 x2]';
 namesFixed2 = {'x0' 'x1' 'x2'};
 
+% Variables entering class-sepcific choice model for Class 3
 VARSF3 = [x0 x1 x2]';
 namesFixed3 = {'x0' 'x1' 'x2'};
 
